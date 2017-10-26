@@ -1,3 +1,5 @@
+googletest
+
 # cmake .gitignore
 CMakeCache.txt
 CMakeFiles

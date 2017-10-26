@@ -23,14 +23,16 @@
             size_t length; \
         }; \
 \
-        struct _list__list_iterator_##TYPE { \
+        struct _list__iterator_##TYPE { \
             struct _list__node_##TYPE* current; \
             struct _list__list_##TYPE* list; \
         }; \
 \
-        struct _list__list_##TYPE* _list__create_list_##TYPE() { \
+        static struct _list__list_##TYPE* \
+        _list__create_##TYPE() { \
             struct _list__list_##TYPE* list = \
-                (struct _list__list_##TYPE*)malloc(sizeof(struct _list__list_##TYPE)); \
+                (struct _list__list_##TYPE*)malloc( \
+                    sizeof(struct _list__list_##TYPE)); \
             if (!list) { \
                 return NULL; \
             } \
@@ -40,25 +42,30 @@
             return list; \
         } \
 \
-        bool _list__clear_list_##TYPE(struct _list__list_##TYPE* list); \
+        static bool _list__clear_##TYPE( \
+                struct _list__list_##TYPE* list); \
 \
-        bool _list__destroy_list_##TYPE(struct _list__list_##TYPE* list) { \
+        static bool _list__destroy_##TYPE( \
+                struct _list__list_##TYPE* list) { \
             if (!list) { \
                 return true; \
             } \
-            if (!_list__clear_list_##TYPE(list)) { \
+            if (!_list__clear_##TYPE(list)) { \
                 return false; \
             } \
             free(list); \
             return true; \
         } \
 \
-        bool _list__push_back_##TYPE(struct _list__list_##TYPE* list, TYPE value) { \
+        static bool _list__push_back_##TYPE( \
+                struct _list__list_##TYPE* list, \
+                TYPE value) { \
             if (!list) { \
                 return false; \
             } \
             struct _list__node_##TYPE* node = \
-                (struct _list__node_##TYPE*)malloc(sizeof(struct _list__node_##TYPE)); \
+                (struct _list__node_##TYPE*)malloc( \
+                    sizeof(struct _list__node_##TYPE)); \
             if (!node) { \
                 return false; \
             } \
@@ -76,12 +83,15 @@
             return true; \
         } \
 \
-        bool _list__insert_##TYPE(struct _list__list_iterator_##TYPE iter, TYPE value) { \
+        static bool _list__insert_##TYPE( \
+                struct _list__iterator_##TYPE iter, \
+                TYPE value) { \
             if (!iter.list) { \
                 return false; \
             } \
             struct _list__node_##TYPE* node = \
-                (struct _list__node_##TYPE*)malloc(sizeof(struct _list__node_##TYPE)); \
+                (struct _list__node_##TYPE*)malloc( \
+                    sizeof(struct _list__node_##TYPE)); \
             if (!node) { \
                 return false; \
             } \
@@ -108,7 +118,8 @@
             return true; \
         } \
 \
-        bool _list__clear_list_##TYPE(struct _list__list_##TYPE* list) { \
+        static bool _list__clear_##TYPE( \
+                struct _list__list_##TYPE* list) { \
             if (!list || !list->length || !list->head) { \
                 assert(!(list && list->tail)); \
                 return true; \
@@ -125,12 +136,15 @@
             return true; \
         } \
 \
-        bool _list__copy_list_##TYPE(const struct _list__list_##TYPE* source_list, \
-                                     struct _list__list_##TYPE* destination_list) { \
+        static bool _list__copy_##TYPE( \
+                const struct _list__list_##TYPE* source_list, \
+                struct _list__list_##TYPE* destination_list) { \
             if (!source_list || !destination_list) { \
                 return false; \
             } \
-            for (struct _list__node_##TYPE* node = source_list->head; node; node = node->next) { \
+            for (struct _list__node_##TYPE* node = source_list->head; \
+                    node; \
+                    node = node->next) { \
                 if (!_list__push_back_##TYPE(destination_list, node->value)) { \
                     return false; \
                 } \
@@ -138,8 +152,9 @@
             return true; \
         } \
 \
-        bool _list__move_list_##TYPE(struct _list__list_##TYPE* source_list, \
-                                     struct _list__list_##TYPE* destination_list) { \
+        static bool _list__move_##TYPE( \
+                struct _list__list_##TYPE* source_list, \
+                struct _list__list_##TYPE* destination_list) { \
             if (!source_list || !destination_list) { \
                 return false; \
             } \
@@ -159,16 +174,18 @@
             return true; \
         } \
 \
-        struct _list__list_iterator_##TYPE _list__find_by_value_##TYPE( \
+        static struct _list__iterator_##TYPE \
+        _list__find_by_value_cmp_##TYPE( \
                 struct _list__list_##TYPE* list, \
-                TYPE value) { \
-            struct _list__list_iterator_##TYPE iter = { NULL, list }; \
+                TYPE* value, \
+                int (*comparator)(TYPE* a, TYPE* b)) { \
+            struct _list__iterator_##TYPE iter = { NULL, list }; \
             if (!list || !list->length) { \
                 return iter; \
             } \
             iter.current = list->head; \
             while (iter.current) { \
-                if (iter.current->value == value) { \
+                if (comparator(&iter.current->value, value) == 0) { \
                     break; \
                 } \
                 iter.current = iter.current->next; \
@@ -176,7 +193,8 @@
             return iter; \
         } \
 \
-        bool _list__remove_##TYPE(struct _list__list_iterator_##TYPE iter) { \
+        static bool _list__remove_##TYPE( \
+                struct _list__iterator_##TYPE iter) { \
             if (!iter.list || !iter.current) { \
                 return false; \
             } \
@@ -197,62 +215,120 @@
             return true; \
         } \
 \
-        bool _list__remove_by_value_##TYPE(struct _list__list_##TYPE* list, TYPE value) { \
-            struct _list__list_iterator_##TYPE iter = _list__find_by_value_##TYPE(list, value); \
+        static bool _list__remove_by_value_cmp_##TYPE( \
+                struct _list__list_##TYPE* list, \
+                TYPE* value, \
+                int (*comparator)(TYPE* a, TYPE* b)) { \
+            struct _list__iterator_##TYPE iter = \
+                _list__find_by_value_cmp_##TYPE(list, value, comparator); \
             return _list__remove_##TYPE(iter); \
         } \
 \
-        struct _list__list_iterator_##TYPE _list__begin_##TYPE(struct _list__list_##TYPE* list) { \
-            struct _list__list_iterator_##TYPE iter = { list->head, list }; \
+        static struct _list__iterator_##TYPE \
+        _list__begin_##TYPE( \
+                struct _list__list_##TYPE* list) { \
+            struct _list__iterator_##TYPE iter = { list->head, list }; \
             return iter; \
         } \
 \
-        struct _list__list_iterator_##TYPE _list__end_##TYPE(struct _list__list_##TYPE* list) { \
-            struct _list__list_iterator_##TYPE iter = { NULL, list }; \
+        static struct _list__iterator_##TYPE \
+        _list__end_##TYPE( \
+                struct _list__list_##TYPE* list) { \
+            struct _list__iterator_##TYPE iter = { NULL, list }; \
             return iter; \
         } \
 \
-        void _list__next_##TYPE(struct _list__list_iterator_##TYPE* iter) { \
+        static struct _list__iterator_##TYPE \
+        _list__tail_##TYPE( \
+                struct _list__list_##TYPE* list) { \
+            struct _list__iterator_##TYPE iter = { list->tail, list }; \
+            return iter; \
+        } \
+\
+        static void _list__next_##TYPE( \
+                struct _list__iterator_##TYPE* iter) { \
             if (iter && iter->current) { \
                 iter->current = iter->current->next; \
             } \
         } \
 \
-        void _list__prev_##TYPE(struct _list__list_iterator_##TYPE* iter) { \
+        static void _list__prev_##TYPE( \
+                struct _list__iterator_##TYPE* iter) { \
             if (iter && iter->current) { \
                 iter->current = iter->current->prev; \
             } \
         }
 
-#define LIST_TYPE(TYPE) struct _list__list_##TYPE*
-#define LIST_ITER_TYPE(TYPE) struct _list__list_iterator_##TYPE
+#define DEFINE_LIST_OPS_FOR_BUILTINS(TYPE) \
+\
+        static struct _list__iterator_##TYPE \
+        _list__find_by_value_##TYPE( \
+                struct _list__list_##TYPE* list, \
+                TYPE value) { \
+            struct _list__iterator_##TYPE iter = { NULL, list }; \
+            if (!list || !list->length) { \
+                return iter; \
+            } \
+            iter.current = list->head; \
+            while (iter.current) { \
+                if (iter.current->value == value) { \
+                    break; \
+                } \
+                iter.current = iter.current->next; \
+            } \
+            return iter; \
+        } \
+\
+        static bool _list__remove_by_value_##TYPE( \
+                struct _list__list_##TYPE* list, \
+                TYPE value) { \
+            struct _list__iterator_##TYPE iter = \
+                _list__find_by_value_##TYPE(list, value); \
+            return _list__remove_##TYPE(iter); \
+        }
 
-#define create_list(TYPE) _list__create_list_##TYPE()
-#define destroy_list(TYPE, list) _list__destroy_list_##TYPE(list)
-#define push_back(TYPE, list, value) _list__push_back_##TYPE(list, value)
-#define insert(TYPE, iter, value) _list__insert_##TYPE(iter, value)
-#define clear_list(TYPE, list) _list__clear_list_##TYPE(list)
-#define copy_list(TYPE, source_list, destination_list) \
-    _list__copy_list_##TYPE(source_list, destination_list)
-#define move_list(TYPE, source_list, destination_list) \
-    _list__move_list_##TYPE(source_list, destination_list)
-#define find_by_value(TYPE, list, value) _list__find_by_value_##TYPE(list, value)
-#define remove(TYPE, iter) _list__remove_##TYPE(iter)
-#define remove_by_value(TYPE, list, value) _list__remove_by_value_##TYPE(list, value)
+#define LIST_TYPE(TYPE) struct _list__list_##TYPE*
+#define LIST_ITER_TYPE(TYPE) struct _list__iterator_##TYPE
+
+#define list_create(TYPE) _list__create_##TYPE()
+#define list_destroy(TYPE, list) _list__destroy_##TYPE(list)
+#define list_push_back(TYPE, list, value) _list__push_back_##TYPE(list, value)
+#define list_insert(TYPE, iter, value) _list__insert_##TYPE(iter, value)
+#define list_clear(TYPE, list) _list__clear_##TYPE(list)
+#define list_copy(TYPE, source_list, destination_list) \
+    _list__copy_##TYPE(source_list, destination_list)
+#define list_move(TYPE, source_list, destination_list) \
+    _list__move_##TYPE(source_list, destination_list)
+#define list_find_by_value(TYPE, list, value) \
+    _list__find_by_value_##TYPE(list, value)
+#define list_find_by_value_cmp(TYPE, list, value, comparator) \
+    _list__find_by_value_cmp_##TYPE(list, &value, &comparator)
+#define list_remove(TYPE, iter) _list__remove_##TYPE(iter)
+#define list_remove_by_value(TYPE, list, value) \
+    _list__remove_by_value_##TYPE(list, value)
+#define list_remove_by_value_cmp(TYPE, list, value, comparator) \
+    _list__remove_by_value_cmp_##TYPE(list, &value, &comparator)
 
 #define list_len(list) list->length
 
-#define begin(TYPE, list) _list__begin_##TYPE(list)
-#define end(TYPE, list) _list__end_##TYPE(list)
-#define next(TYPE, iter) _list__next_##TYPE(&iter)
-#define prev(TYPE, iter) _list__prev_##TYPE(&iter)
-#define iter_valid(iter) (!!iter.current)
-#define iter_value(iter) iter.current->value
+#define list_begin(TYPE, list) _list__begin_##TYPE(list)
+#define list_end(TYPE, list) _list__end_##TYPE(list)
+#define list_head(TYPE, list) list_begin(TYPE, list)
+#define list_tail(TYPE, list) _list__tail_##TYPE(list)
+#define list_next(TYPE, iter) _list__next_##TYPE(&iter)
+#define list_prev(TYPE, iter) _list__prev_##TYPE(&iter)
+#define list_iter_valid(iter) (!!iter.current)
+#define list_iter_value(iter) iter.current->value
+#define list_iter_eq(iter_i, iter_j) iter_i.current == iter_j.current
 
-#define for_each_in_list(TYPE, list, var_name) \
-    for (struct _list__node_##TYPE* var_name = list->head; var_name; var_name = var_name->next)
-#define for_each_in_list_reversed(TYPE, list, var_name) \
-    for (struct _list__node_##TYPE* var_name = list->tail; var_name; var_name = var_name->prev)
-#define var_value(var_name) var_name->value
+#define list_for_each(TYPE, list, var_name) \
+    for (struct _list__node_##TYPE* var_name = list->head; \
+            var_name; \
+            var_name = var_name->next)
+#define list_for_each_reversed(TYPE, list, var_name) \
+    for (struct _list__node_##TYPE* var_name = list->tail; \
+            var_name; \
+            var_name = var_name->prev)
+#define list_var_value(var_name) var_name->value
 
 #endif //CLIST_LIST_H

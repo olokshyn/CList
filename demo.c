@@ -4,101 +4,103 @@
 
 #ifndef LIST_DEFINED_INT
 DEFINE_LIST(int)
+DEFINE_LIST_OPS_FOR_BUILTINS(int)
 #define LIST_DEFINED_INT
 #endif
 
 #ifndef LIST_DEFINED_DOUBLE
 DEFINE_LIST(double)
+DEFINE_LIST_OPS_FOR_BUILTINS(double)
 #define LIST_DEFINED_DOUBLE
 #endif
 
 void test_list_int() {
-    LIST_TYPE(int) list = create_list(int);
+    LIST_TYPE(int) list = list_create(int);
     if (!list) {
         goto exit;
     }
 
-    push_back(int, list, 10);
-    push_back(int, list, 20);
-    push_back(int, list, 30);
+    list_push_back(int, list, 10);
+    list_push_back(int, list, 20);
+    list_push_back(int, list, 30);
 
-    LIST_ITER_TYPE(int) iter = find_by_value(int, list, 20);
-    if (!iter_valid(iter)) {
+    LIST_ITER_TYPE(int) iter = list_find_by_value(int, list, 20);
+    if (!list_iter_valid(iter)) {
         goto destroy_list;
     }
-    insert(int, iter, 15);
+    list_insert(int, iter, 15);
 
-    for_each_in_list(int, list, var) {
-        printf("%d\n", var_value(var));
+    list_for_each(int, list, var) {
+        printf("%d\n", list_var_value(var));
     }
     printf("\n");
 
-    LIST_TYPE(int) another_list = create_list(int);
+    LIST_TYPE(int) another_list = list_create(int);
     if (!another_list) {
         goto destroy_list;
     }
 
-    copy_list(int, list, another_list);
-    move_list(int, list, another_list);
+    list_copy(int, list, another_list);
+    list_move(int, list, another_list);
 
-    iter = find_by_value(int, another_list, 15);
-    if (!iter_valid(iter)) {
+    iter = list_find_by_value(int, another_list, 15);
+    if (!list_iter_valid(iter)) {
         goto destroy_another_list;
     }
 
-    remove(int, iter);
-    remove_by_value(int, another_list, 20);
+    list_remove(int, iter);
+    list_remove_by_value(int, another_list, 20);
 
-    for (LIST_ITER_TYPE(int) i = begin(int, another_list);
-            iter_valid(i);
-            next(int, i)) {
-        printf("%d\n", iter_value(i));
+    for (LIST_ITER_TYPE(int) i = list_begin(int, another_list);
+         list_iter_valid(i);
+         list_next(int, i)) {
+        printf("%d\n", list_iter_value(i));
     }
     printf("\n");
 
-    clear_list(int, another_list);
+    list_clear(int, another_list);
 
 destroy_another_list:
-    destroy_list(int, another_list);
+    list_destroy(int, another_list);
 destroy_list:
-    destroy_list(int, list);
+    list_destroy(int, list);
 exit:
     return;
 }
 
 void test_int_double() {
-    LIST_TYPE(double) list = create_list(double);
+    LIST_TYPE(double) list = list_create(double);
     if (!list) {
         goto exit;
     }
 
-    push_back(double, list, 0.3);
-    push_back(double, list, 0.5);
-    push_back(double, list, 1.8);
+    list_push_back(double, list, 0.3);
+    list_push_back(double, list, 0.5);
+    list_push_back(double, list, 1.8);
 
-    LIST_ITER_TYPE(double) iter = begin(double, list);
-    next(double, iter);
-    next(double, iter);
+    LIST_ITER_TYPE(double) iter = list_begin(double, list);
+    list_next(double, iter);
+    list_next(double, iter);
 
-    for (; iter_valid(iter); prev(double, iter)) {
-        printf("%f\n", iter_value(iter));
+    for (; list_iter_valid(iter); list_prev(double, iter)) {
+        printf("%f\n", list_iter_value(iter));
     }
     printf("\n");
 
-    clear_list(double, list);
+    list_clear(double, list);
 
-    push_back(double, list, 0.3);
-    push_back(double, list, 0.5);
-    push_back(double, list, 1.8);
+    list_push_back(double, list, 0.3);
+    list_push_back(double, list, 0.5);
+    list_push_back(double, list, 1.8);
 
-    for_each_in_list_reversed(double, list, var) {
-        printf("%f\n", var_value(var));
+    list_for_each_reversed(double, list, var) {
+        printf("%f\n", list_var_value(var));
     }
     printf("\n");
 
     printf("length = %zu\n", list_len(list));
 
-    destroy_list(double, list);
+    list_destroy(double, list);
 exit:
     return;
 }
