@@ -227,6 +227,7 @@
         static struct _list__iterator_##TYPE \
         _list__begin_##TYPE( \
                 struct _list__list_##TYPE* list) { \
+            assert(list); \
             struct _list__iterator_##TYPE iter = { list->head, list }; \
             return iter; \
         } \
@@ -234,6 +235,7 @@
         static struct _list__iterator_##TYPE \
         _list__end_##TYPE( \
                 struct _list__list_##TYPE* list) { \
+            assert(list); \
             struct _list__iterator_##TYPE iter = { NULL, list }; \
             return iter; \
         } \
@@ -241,6 +243,7 @@
         static struct _list__iterator_##TYPE \
         _list__tail_##TYPE( \
                 struct _list__list_##TYPE* list) { \
+            assert(list); \
             struct _list__iterator_##TYPE iter = { list->tail, list }; \
             return iter; \
         } \
@@ -315,20 +318,25 @@
 #define list_end(TYPE, list) _list__end_##TYPE(list)
 #define list_head(TYPE, list) list_begin(TYPE, list)
 #define list_tail(TYPE, list) _list__tail_##TYPE(list)
+#define list_first(list) list->head->value
+#define list_last(list) list->tail->value
 #define list_next(TYPE, iter) _list__next_##TYPE(&iter)
 #define list_prev(TYPE, iter) _list__prev_##TYPE(&iter)
 #define list_iter_valid(iter) (!!iter.current)
 #define list_iter_value(iter) iter.current->value
-#define list_iter_eq(iter_i, iter_j) iter_i.current == iter_j.current
+#define list_iter_eq(iter_i, iter_j) (iter_i.current == iter_j.current)
 
 #define list_for_each(TYPE, list, var_name) \
+    assert(list); \
     for (struct _list__node_##TYPE* var_name = list->head; \
             var_name; \
             var_name = var_name->next)
 #define list_for_each_reversed(TYPE, list, var_name) \
+    assert(list); \
     for (struct _list__node_##TYPE* var_name = list->tail; \
             var_name; \
             var_name = var_name->prev)
 #define list_var_value(var_name) var_name->value
+#define list_var_eq(var_name1, var_name2) (var_name1 == var_name2)
 
 #endif //CLIST_LIST_H
