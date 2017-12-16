@@ -224,6 +224,40 @@
             return _list__remove_##TYPE(iter); \
         } \
 \
+        static TYPE _list__pop_front_##TYPE( \
+                struct _list__list_##TYPE* list) { \
+            assert(list->head); \
+            if (list->head->next) { \
+                list->head->next->prev = NULL; \
+            } \
+            else { \
+                list->tail = NULL; \
+            } \
+            _list__node_##TYPE* node = list->head; \
+            list->head = list->head->next; \
+            TYPE value = node->value; \
+            free(node); \
+            --list->length; \
+            return value; \
+        } \
+\
+        static TYPE _list__pop_back_##TYPE( \
+                struct _list__list_##TYPE* list) { \
+            assert(list->tail); \
+            if (list->tail->prev) { \
+                list->tail->prev->next = NULL; \
+            } \
+            else { \
+                list->head = NULL; \
+            } \
+            _list__node_##TYPE* node = list->tail; \
+            list->tail = list->tail->prev; \
+            TYPE value = node->value; \
+            free(node); \
+            --list->length; \
+            return value; \
+        } \
+\
         static struct _list__iterator_##TYPE \
         _list__begin_##TYPE( \
                 struct _list__list_##TYPE* list) { \
@@ -311,8 +345,11 @@
     _list__remove_by_value_##TYPE(list, value)
 #define list_remove_by_value_cmp(TYPE, list, value, comparator) \
     _list__remove_by_value_cmp_##TYPE(list, &value, &comparator)
+#define list_pop_front(TYPE, list) _list__pop_front_##TYPE(list)
+#define list_pop_back(TYPE, list) _list__pop_back_##TYPE(list)
 
 #define list_len(list) list->length
+#define list_empty(list) (list->length == 0)
 
 #define list_begin(TYPE, list) _list__begin_##TYPE(list)
 #define list_end(TYPE, list) _list__end_##TYPE(list)

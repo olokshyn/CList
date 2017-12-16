@@ -54,6 +54,7 @@ TEST(CListTest, Creation)
     ASSERT_TRUE(list);
 
     EXPECT_EQ(0, list_len(list));
+    EXPECT_TRUE(list_empty(list));
     size_t count = 0;
     list_for_each(size_t, list, var) {
         ++count;
@@ -84,6 +85,7 @@ TEST(CListTest, PushBack)
         EXPECT_TRUE(list_push_back(double, list, pos));
     }
     EXPECT_EQ(6, list_len(list));
+    EXPECT_FALSE(list_empty(list));
 
     size_t index = 0;
     list_for_each(double, list, var)
@@ -106,6 +108,9 @@ TEST(CListTest, Insert)
         EXPECT_TRUE(list_insert(int, iter, i));
     }
     EXPECT_EQ(4, list_len(list));
+    EXPECT_FALSE(list_empty(list));
+    EXPECT_EQ(0, list_first(list));
+    EXPECT_EQ(3, list_last(list));
 
     int index = 0;
     list_for_each(int, list, var)
@@ -146,8 +151,9 @@ TEST(CListTest, ClearList)
     }
     EXPECT_EQ(5, list_len(list));
 
-    list_clear(test_type, list);
+    EXPECT_TRUE(list_clear(test_type, list));
     EXPECT_EQ(0, list_len(list));
+    EXPECT_TRUE(list_empty(list));
 
     for (int i = 0; i != 5; ++i)
     {
@@ -165,8 +171,9 @@ TEST(CListTest, ClearList)
     }
     EXPECT_EQ(5, index);
 
-    list_clear(test_type, list);
+    EXPECT_TRUE(list_clear(test_type, list));
     EXPECT_EQ(0, list_len(list));
+    EXPECT_TRUE(list_empty(list));
 
     ASSERT_TRUE(list_destroy(test_type, list));
 }
@@ -188,7 +195,9 @@ TEST(CListTest, CopyList)
 
     EXPECT_TRUE(list_copy(test_type, list, other_list));
     EXPECT_EQ(5, list_len(list));
+    EXPECT_FALSE(list_empty(list));
     EXPECT_EQ(5, list_len(other_list));
+    EXPECT_FALSE(list_empty(list));
 
     // Check the integrity of the original list
     int index = 0;
@@ -290,7 +299,9 @@ TEST(CListTest, MoveList)
 
     EXPECT_TRUE(list_move(test_type, list, other_list));
     EXPECT_EQ(0, list_len(list));
+    EXPECT_TRUE(list_empty(list));
     EXPECT_EQ(5, list_len(other_list));
+    EXPECT_FALSE(list_empty(other_list));
 
     // Check that the original list is empty
     int index = 0;
@@ -313,7 +324,9 @@ TEST(CListTest, MoveList)
     // Test moving backwards
     EXPECT_TRUE(list_move(test_type, other_list, list));
     EXPECT_EQ(5, list_len(list));
+    EXPECT_FALSE(list_empty(list));
     EXPECT_EQ(0, list_len(other_list));
+    EXPECT_TRUE(list_empty(other_list));
 
     // Check the integrity of the list
     index = 0;
@@ -482,6 +495,92 @@ TEST(CListTest, Remove)
     EXPECT_EQ(2, list_iter_value(complex_iter).field_i);
     list_next(test_type, complex_iter);
     EXPECT_FALSE(list_iter_valid(complex_iter));
+
+    ASSERT_TRUE(list_destroy(test_type, complex_list));
+    ASSERT_TRUE(list_destroy(int, simple_list));
+}
+
+TEST(CListTest, Pop)
+{
+    LIST_TYPE(int) simple_list = list_create(int);
+    ASSERT_TRUE(simple_list);
+
+    LIST_TYPE(test_type) complex_list = list_create(test_type);
+    ASSERT_TRUE(complex_list);
+
+    for (int i = 0; i != 5; ++i)
+    {
+        EXPECT_TRUE(list_push_back(int, simple_list, i));
+        test_type data = { i, i + 0.5 };
+        EXPECT_TRUE(list_push_back(test_type, complex_list, data));
+    }
+    EXPECT_EQ(5, list_len(simple_list));
+    EXPECT_EQ(5, list_len(complex_list));
+
+    EXPECT_EQ(0, list_pop_front(int, simple_list));
+    EXPECT_EQ(4, list_len(simple_list));
+    EXPECT_EQ(0, list_pop_front(test_type, complex_list).field_i);
+    EXPECT_EQ(4, list_len(complex_list));
+
+    int index = 1;
+    list_for_each(int, simple_list, var) {
+        EXPECT_EQ(index++, list_var_value(var));
+    }
+    EXPECT_EQ(5, index);
+
+    index = 1;
+    list_for_each(test_type, complex_list, var) {
+        EXPECT_EQ(index++, list_var_value(var).field_i);
+    }
+    EXPECT_EQ(5, index);
+
+    EXPECT_EQ(4, list_pop_back(int, simple_list));
+    EXPECT_EQ(3, list_len(simple_list));
+    EXPECT_EQ(4, list_pop_back(test_type, complex_list).field_i);
+    EXPECT_EQ(3, list_len(complex_list));
+
+    index = 1;
+    list_for_each(int, simple_list, var) {
+        EXPECT_EQ(index++, list_var_value(var));
+    }
+    EXPECT_EQ(4, index);
+
+    index = 1;
+    list_for_each(test_type, complex_list, var) {
+        EXPECT_EQ(index++, list_var_value(var).field_i);
+    }
+    EXPECT_EQ(4, index);
+
+    EXPECT_TRUE(list_push_back(int, simple_list, 4));
+    EXPECT_EQ(4, list_len(simple_list));
+    EXPECT_TRUE(list_insert(int, list_begin(int, simple_list), 0));
+    EXPECT_EQ(5, list_len(simple_list));
+
+    index = 0;
+    list_for_each(int, simple_list, var) {
+        EXPECT_EQ(index++, list_var_value(var));
+    }
+    EXPECT_EQ(5, index);
+
+    EXPECT_TRUE(list_clear(int, simple_list));
+
+    EXPECT_TRUE(list_push_back(int, simple_list, 5));
+    EXPECT_EQ(5, list_pop_front(int, simple_list));
+    EXPECT_EQ(0, list_len(simple_list));
+    EXPECT_TRUE(list_empty(simple_list));
+    EXPECT_TRUE(list_iter_eq(list_head(int, simple_list),
+                             list_end(int, simple_list)));
+    EXPECT_TRUE(list_iter_eq(list_tail(int, simple_list),
+                             list_end(int, simple_list)));
+
+    EXPECT_TRUE(list_push_back(int, simple_list, 5));
+    EXPECT_EQ(5, list_pop_back(int, simple_list));
+    EXPECT_EQ(0, list_len(simple_list));
+    EXPECT_TRUE(list_empty(simple_list));
+    EXPECT_TRUE(list_iter_eq(list_head(int, simple_list),
+                             list_end(int, simple_list)));
+    EXPECT_TRUE(list_iter_eq(list_tail(int, simple_list),
+                             list_end(int, simple_list)));
 
     ASSERT_TRUE(list_destroy(test_type, complex_list));
     ASSERT_TRUE(list_destroy(int, simple_list));
