@@ -233,7 +233,7 @@
             else { \
                 list->tail = NULL; \
             } \
-            _list__node_##TYPE* node = list->head; \
+            struct _list__node_##TYPE* node = list->head; \
             list->head = list->head->next; \
             TYPE value = node->value; \
             free(node); \
@@ -250,7 +250,7 @@
             else { \
                 list->head = NULL; \
             } \
-            _list__node_##TYPE* node = list->tail; \
+            struct _list__node_##TYPE* node = list->tail; \
             list->tail = list->tail->prev; \
             TYPE value = node->value; \
             free(node); \
@@ -293,6 +293,27 @@
                 struct _list__iterator_##TYPE* iter) { \
             if (iter && iter->current) { \
                 iter->current = iter->current->prev; \
+            } \
+        } \
+\
+        static void _list__selection_sort_cmp_##TYPE( \
+                struct _list__list_##TYPE* list, \
+                bool (*is_less)(TYPE* a, TYPE* b)) { \
+            struct _list__node_##TYPE* i_node = list->head; \
+            while (i_node) { \
+                struct _list__node_##TYPE *j_node = i_node->next, *min_node = i_node; \
+                while (j_node) { \
+                    if (is_less(&j_node->value, &min_node->value)) { \
+                        min_node = j_node; \
+                    } \
+                    j_node = j_node->next; \
+                } \
+                if (min_node != i_node) { \
+                    TYPE temp = i_node->value; \
+                    i_node->value = min_node->value; \
+                    min_node->value = temp; \
+                } \
+                i_node = i_node->next; \
             } \
         }
 
@@ -362,6 +383,9 @@
 #define list_iter_valid(iter) (!!iter.current)
 #define list_iter_value(iter) iter.current->value
 #define list_iter_eq(iter_i, iter_j) (iter_i.current == iter_j.current)
+
+#define list_selection_sort_cmp(TYPE, list, is_less) \
+    _list__selection_sort_cmp_##TYPE(list, is_less)
 
 #define list_for_each(TYPE, list, var_name) \
     assert(list); \

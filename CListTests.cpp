@@ -43,6 +43,16 @@ int test_type_cmp(test_type* a, test_type* b)
     return -1;
 }
 
+bool is_less(int* a, int* b)
+{
+    return *a < *b;
+}
+
+bool is_greater(int* a, int* b)
+{
+    return *a > *b;
+}
+
 #ifndef LIST_DEFINED_TEST_TYPE
 DEFINE_LIST(test_type)
 #define LIST_DEFINED_TEST_TYPE
@@ -56,7 +66,8 @@ TEST(CListTest, Creation)
     EXPECT_EQ(0, list_len(list));
     EXPECT_TRUE(list_empty(list));
     size_t count = 0;
-    list_for_each(size_t, list, var) {
+    list_for_each(size_t, list, var)
+    {
         ++count;
     }
     EXPECT_EQ(0, count);
@@ -523,13 +534,15 @@ TEST(CListTest, Pop)
     EXPECT_EQ(4, list_len(complex_list));
 
     int index = 1;
-    list_for_each(int, simple_list, var) {
+    list_for_each(int, simple_list, var)
+    {
         EXPECT_EQ(index++, list_var_value(var));
     }
     EXPECT_EQ(5, index);
 
     index = 1;
-    list_for_each(test_type, complex_list, var) {
+    list_for_each(test_type, complex_list, var)
+    {
         EXPECT_EQ(index++, list_var_value(var).field_i);
     }
     EXPECT_EQ(5, index);
@@ -540,13 +553,15 @@ TEST(CListTest, Pop)
     EXPECT_EQ(3, list_len(complex_list));
 
     index = 1;
-    list_for_each(int, simple_list, var) {
+    list_for_each(int, simple_list, var)
+    {
         EXPECT_EQ(index++, list_var_value(var));
     }
     EXPECT_EQ(4, index);
 
     index = 1;
-    list_for_each(test_type, complex_list, var) {
+    list_for_each(test_type, complex_list, var)
+    {
         EXPECT_EQ(index++, list_var_value(var).field_i);
     }
     EXPECT_EQ(4, index);
@@ -557,7 +572,8 @@ TEST(CListTest, Pop)
     EXPECT_EQ(5, list_len(simple_list));
 
     index = 0;
-    list_for_each(int, simple_list, var) {
+    list_for_each(int, simple_list, var)
+    {
         EXPECT_EQ(index++, list_var_value(var));
     }
     EXPECT_EQ(5, index);
@@ -584,6 +600,123 @@ TEST(CListTest, Pop)
 
     ASSERT_TRUE(list_destroy(test_type, complex_list));
     ASSERT_TRUE(list_destroy(int, simple_list));
+}
+
+TEST(CListTest, SelectionSort)
+{
+    LIST_TYPE(int) list = list_create(int);
+    ASSERT_TRUE(list);
+
+    // sort empty list
+    list_selection_sort_cmp(int, list, is_less);
+    EXPECT_EQ(0, list_len(list));
+    EXPECT_TRUE(list_empty(list));
+
+    // sort a list of one element
+    EXPECT_TRUE(list_push_back(int, list, 5));
+    list_selection_sort_cmp(int, list, is_less);
+    EXPECT_EQ(1, list_len(list));
+    EXPECT_EQ(5, list_first(list));
+    EXPECT_EQ(5, list_last(list));
+
+    // sort a list of two elements in ascending order
+    EXPECT_TRUE(list_push_back(int, list, 7));
+    list_selection_sort_cmp(int, list, is_less);
+    EXPECT_EQ(2, list_len(list));
+    EXPECT_EQ(5, list_first(list));
+    EXPECT_EQ(7, list_last(list));
+
+    // sort a list of two elements in descending order
+    EXPECT_EQ(7, list_pop_back(int, list));
+    EXPECT_TRUE(list_push_back(int, list, 3));
+    list_selection_sort_cmp(int, list, is_less);
+    EXPECT_EQ(2, list_len(list));
+    EXPECT_EQ(3, list_first(list));
+    EXPECT_EQ(5, list_last(list));
+
+    // sort a list of three elements in ascending order
+    EXPECT_TRUE(list_push_back(int, list, 7));
+    list_selection_sort_cmp(int, list, is_less);
+    EXPECT_EQ(3, list_len(list));
+    auto iter = list_begin(int, list);
+    EXPECT_EQ(3, list_iter_value(iter));
+    list_next(int, iter);
+    EXPECT_EQ(5, list_iter_value(iter));
+    list_next(int, iter);
+    EXPECT_EQ(7, list_iter_value(iter));
+    list_next(int, iter);
+    EXPECT_TRUE(list_iter_eq(list_end(int, list), iter));
+
+    // sort a list of three elements descending
+    list_selection_sort_cmp(int, list, is_greater);
+    EXPECT_EQ(3, list_len(list));
+    iter = list_begin(int, list);
+    EXPECT_EQ(7, list_iter_value(iter));
+    list_next(int, iter);
+    EXPECT_EQ(5, list_iter_value(iter));
+    list_next(int, iter);
+    EXPECT_EQ(3, list_iter_value(iter));
+    list_next(int, iter);
+    EXPECT_TRUE(list_iter_eq(list_end(int, list), iter));
+
+    // sort a list of three elements ascending
+    list_selection_sort_cmp(int, list, is_less);
+    EXPECT_EQ(3, list_len(list));
+    iter = list_begin(int, list);
+    EXPECT_EQ(3, list_iter_value(iter));
+    list_next(int, iter);
+    EXPECT_EQ(5, list_iter_value(iter));
+    list_next(int, iter);
+    EXPECT_EQ(7, list_iter_value(iter));
+    list_next(int, iter);
+    EXPECT_TRUE(list_iter_eq(list_end(int, list), iter));
+
+    // sort a list of equal elements
+    EXPECT_TRUE(list_clear(int, list));
+    for (size_t i = 0; i != 5; ++i)
+    {
+        EXPECT_TRUE(list_push_back(int, list, 5));
+    }
+    list_selection_sort_cmp(int, list, is_less);
+    EXPECT_EQ(5, list_len(list));
+    size_t count = 0;
+    list_for_each(int, list, var)
+    {
+        EXPECT_EQ(5, list_var_value(var));
+        ++count;
+    }
+    EXPECT_EQ(5, count);
+
+    // sort a list of unordered elements ascending
+    EXPECT_TRUE(list_clear(int, list));
+    for (size_t i = 0; i != 100; ++i)
+    {
+        EXPECT_TRUE(list_push_back(int, list, i % 2 ? 50 + i : 50 - i));
+    }
+    list_selection_sort_cmp(int, list, is_less);
+    iter = list_begin(int, list);
+    int prev_value = list_iter_value(iter);
+    list_next(int, iter);
+    while (!list_iter_eq(iter, list_end(int, list)))
+    {
+        EXPECT_LE(prev_value, list_iter_value(iter));
+        prev_value = list_iter_value(iter);
+        list_next(int, iter);
+    }
+
+    // sort a list of elements in ascending order descending
+    list_selection_sort_cmp(int, list, is_greater);
+    iter = list_begin(int, list);
+    prev_value = list_iter_value(iter);
+    list_next(int, iter);
+    while (!list_iter_eq(iter, list_end(int, list)))
+    {
+        EXPECT_GE(prev_value, list_iter_value(iter));
+        prev_value = list_iter_value(iter);
+        list_next(int, iter);
+    }
+
+    ASSERT_TRUE(list_destroy(int, list));
 }
 
 TEST(CListTest, Iterator)
