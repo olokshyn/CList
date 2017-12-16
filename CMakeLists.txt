@@ -8,7 +8,7 @@ set(DEMO_SOURCE_FILES list.h demo.c)
 add_executable(CListDemo ${DEMO_SOURCE_FILES})
 set_property(TARGET CListDemo PROPERTY C_STANDARD 11)
 
-add_subdirectory(googletest)
+add_subdirectory(3rdParty/googletest)
 
 include_directories(${gtest_SOURCE_DIR}/include)
 
